@@ -128,7 +128,7 @@ class JwtService(@Value("\${jwt.secretkey}") private val secretKey: String,
         return try {
             val expiration = getExpirationDateFromToken(token)
             expiration!!.before(Date())
-        } catch (e: ExpiredJwtException) {
+        } catch (e: Exception) {
             true
         }
     }

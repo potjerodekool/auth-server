@@ -1,5 +1,6 @@
 package com.github.potjerodekool.jwtserver.data.entity
 
+import java.time.LocalDateTime
 import javax.persistence.*
 
 @Table(name = "user")
@@ -7,14 +8,15 @@ import javax.persistence.*
 data class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        @Column(name = "id")
+        @Column(name = "id", nullable = false)
         var id: Int? = null,
-        @Column(name = "userid")
-        var userid: String,
-        @Column(name = "password")
+        @Column(name = "userid", nullable = false)
+        var userId: String,
+        @Column(name = "password", nullable = false)
         var password: String,
         @Column(name = "resettoken")
-        var resettoken: String? = null) {
+        var resetToken: String? = null,
+        @Column(name = "resetoken_ttl")
+        var resetTokenTtl: LocalDateTime? = null) {
 
-    constructor(): this(id = 0, userid = "", password = "")
 }

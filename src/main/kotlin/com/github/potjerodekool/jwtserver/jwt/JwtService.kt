@@ -3,19 +3,15 @@ package com.github.potjerodekool.jwtserver.jwt
 import com.github.potjerodekool.jwtserver.data.entity.RefreshToken
 import com.github.potjerodekool.jwtserver.data.repository.RefreshTokenRepository
 import com.github.potjerodekool.jwtserver.jwt.model.JwtUser
-import io.jsonwebtoken.Claims
-import io.jsonwebtoken.JwtBuilder
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.*
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.stereotype.Service
 import java.util.*
+import javax.annotation.PostConstruct
 import javax.crypto.spec.SecretKeySpec
 import javax.xml.bind.DatatypeConverter
-
-import org.springframework.scheduling.annotation.Scheduled
-import javax.annotation.PostConstruct
 
 @Service
 class JwtService(@Value("\${jwt.secretkey}") private val secretKey: String,
@@ -67,7 +63,7 @@ class JwtService(@Value("\${jwt.secretkey}") private val secretKey: String,
     }
 
     private final fun generateRefreshToken(): String = createJWT(
-            "refreshToken","refreshToken", REFRESH_TOKEN_TTL
+            "refreshToken", "refreshToken", REFRESH_TOKEN_TTL
     )
 
     fun getRefreshToken(): String = refreshToken
@@ -129,8 +125,12 @@ class JwtService(@Value("\${jwt.secretkey}") private val secretKey: String,
     }
 
     private fun isTokenExpired(token: String): Boolean {
-        val expiration = getExpirationDateFromToken(token)
-        return expiration!!.before(Date())
+        return try {
+            val expiration = getExpirationDateFromToken(token)
+            expiration!!.before(Date())
+        } catch (e: ExpiredJwtException) {
+            true
+        }
     }
 
     private fun isCreatedBeforeLastPasswordReset(created: Date?, lastPasswordReset: Date?): Boolean {

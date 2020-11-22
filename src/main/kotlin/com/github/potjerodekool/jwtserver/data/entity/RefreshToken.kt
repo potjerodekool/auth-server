@@ -13,6 +13,4 @@ data class RefreshToken(
         var id: Int = 0,
         @Column(name = "token", nullable = false)
         var token: String) {
-
-        constructor(): this(0, "")
 }

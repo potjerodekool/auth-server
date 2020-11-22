@@ -1,0 +1,1 @@
+docker push evert1981/auth-server:latest

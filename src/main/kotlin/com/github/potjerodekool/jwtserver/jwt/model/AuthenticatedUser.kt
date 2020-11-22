@@ -6,10 +6,6 @@ import java.util.*
 class AuthenticatedUser(private val userName: String,
                         private val password: String): JwtUser {
 
-    init {
-        println("init")
-    }
-
     override fun getUserId(): String {
         TODO("Not yet implemented")
     }

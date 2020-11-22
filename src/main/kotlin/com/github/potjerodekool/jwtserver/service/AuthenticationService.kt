@@ -14,10 +14,18 @@ class AuthenticationService(private var authenticationManager: AuthenticationMan
     fun authenticate(userName: String, password: String): AuthenticationResponse {
         val authentication = authenticationManager.authenticate(UsernamePasswordAuthenticationToken(userName, password))
         SecurityContextHolder.getContext().authentication = authentication
-        val user = authentication.principal
-
         val token = jwtService.createAccessToken(userName, userName)
         val refreshToken = jwtService.getRefreshToken()
         return AuthenticationResponse(token, refreshToken)
+    }
+
+    fun refreshToken(refreshToken: String): AuthenticationResponse? {
+        val newAccessToken = jwtService.refreshAccessToken(refreshToken)
+
+        if (newAccessToken == null) {
+            return null
+        }
+
+        return AuthenticationResponse(newAccessToken, jwtService.getRefreshToken())
     }
 }

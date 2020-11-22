@@ -4,6 +4,7 @@ import com.github.potjerodekool.jwtserver.jwt.JWTAuthenticationFilter
 import com.github.potjerodekool.jwtserver.jwt.JwtAuthenticationEntryPoint
 import com.github.potjerodekool.jwtserver.jwt.JwtService
 import com.github.potjerodekool.jwtserver.service.AccountService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
@@ -17,7 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 class WebSecurity(private val jwtService: JwtService,
                   private val accountService: AccountService,
-                  var unauthorizedHandler : JwtAuthenticationEntryPoint): WebSecurityConfigurerAdapter() {
+                  private var unauthorizedHandler : JwtAuthenticationEntryPoint,
+                  @Value("\${server.servlet.context-path}") private val contextPath: String): WebSecurityConfigurerAdapter() {
 
     @Bean
     @Throws(Exception::class)
@@ -32,8 +34,7 @@ class WebSecurity(private val jwtService: JwtService,
     }
 
     override fun configure(web: WebSecurity?) {
-        super.configure(web)
-        web?.ignoring()?.antMatchers("/**");
+        web?.ignoring()?.antMatchers("/**")
     }
 
     @Throws(Exception::class)
@@ -48,19 +49,19 @@ class WebSecurity(private val jwtService: JwtService,
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 
                 .authorizeRequests()
-                .antMatchers("/auth").permitAll()
-                .antMatchers("/auth/**").permitAll()
-                .antMatchers("/signup").permitAll()
-                .antMatchers("/signup/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll()
-                .antMatchers(HttpMethod.GET, "/webjars/springfox-swagger-ui/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/swagger-resources/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/v2/api-docs").permitAll()
-                .antMatchers(HttpMethod.GET, "/actuator").permitAll()
-                .antMatchers(HttpMethod.GET, "/health").permitAll()
-                .antMatchers(HttpMethod.GET, "/metrics").permitAll()
+                .antMatchers("$contextPath/authenticate").permitAll()
+                .antMatchers("$contextPath/auth/**").permitAll()
+                .antMatchers("$contextPath/signup").permitAll()
+                .antMatchers("$contextPath/signup/**").permitAll()
+                .antMatchers(HttpMethod.GET, "$contextPath/swagger-ui.html").permitAll()
+                .antMatchers(HttpMethod.GET, "$contextPath/webjars/springfox-swagger-ui/**").permitAll()
+                .antMatchers(HttpMethod.GET, "$contextPath/swagger-resources/**").permitAll()
+                .antMatchers(HttpMethod.GET, "$contextPath/v2/api-docs").permitAll()
+                .antMatchers(HttpMethod.GET, "$contextPath/actuator").permitAll()
+                .antMatchers(HttpMethod.GET, "$contextPath/health").permitAll()
+                .antMatchers(HttpMethod.GET, "$contextPath/metrics").permitAll()
 
-                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .antMatchers(HttpMethod.OPTIONS, "$contextPath/**").permitAll()
                 .anyRequest().authenticated()
 
         // Custom JWT based security filter

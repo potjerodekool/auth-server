@@ -26,12 +26,12 @@ class AuthController(private val authenticationService: AuthenticationService,
     fun authenticate(@RequestBody request: JwtAuthenticationRequest): ResponseEntity<AuthenticationResponse> {
         return try {
             val response = authenticationService.authenticate(
-                    request.userName,
+                    request.email,
                     request.password
             )
             ResponseEntity.ok(response)
         } catch (e: BadCredentialsException) {
-            LOGGER.log(Level.INFO, "Login failed for ${request.userName}, bad credentials")
+            LOGGER.log(Level.INFO, "Login failed for ${request.email}, bad credentials")
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
     }
@@ -39,7 +39,7 @@ class AuthController(private val authenticationService: AuthenticationService,
     @PostMapping("/signup", consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun signUp(@RequestBody request: SignupRequst): ResponseEntity<String> {
         val errorMessage = accountService.signUp(
-                request.userName,
+                request.email,
                 request.password
         )
 
@@ -87,7 +87,7 @@ class AuthController(private val authenticationService: AuthenticationService,
 
     @PostMapping("/requestresetPassword")
     fun requestPasswordResetWithAuthToken(@RequestBody() request: RequestPasswordResetRequest): ResponseEntity<String> {
-        accountService.requestPasswordReset(request.userid)
+        accountService.requestPasswordReset(request.email)
         return ResponseEntity.ok().build()
     }
 

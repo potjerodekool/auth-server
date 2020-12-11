@@ -31,7 +31,7 @@ internal class AccountServiceTest {
     @MockK
     private lateinit var javaMailSender: JavaMailSender
 
-    private val mailUser = "evert"
+    private val mailUser = "evert@mail.com"
 
     private val loginUrl = "http://localhost:8080/login"
 
@@ -44,18 +44,19 @@ internal class AccountServiceTest {
     fun loadUserByUserName() {
         val user = User(
                 id = 121,
-                userId = "Evert",
+                uuid = UUID.randomUUID().toString(),
+                email= "evert@mail.com",
                 password = "90934-0",
         )
 
         every {
-            userRepositoryMock.findByUserId("evert")
+            userRepositoryMock.findUserByEmail("evert@mail.com")
         } returns user
 
-        val loadedUser = accountService.loadUserByUsername("evert")
+        val loadedUser = accountService.loadUserByUsername("evert@mail.com")
 
         assertTrue(loadedUser is AuthenticatedUser)
-        assertEquals("evert", loadedUser.username)
+        assertEquals("evert@mail.com", loadedUser.username)
     }
 
     @Test
@@ -70,7 +71,7 @@ internal class AccountServiceTest {
     @Test
     fun `loadUserByUserName with unknown user`() {
         every {
-            userRepositoryMock.findByUserId(any())
+            userRepositoryMock.findUserByEmail(any())
         } returns null
 
         val exception = assertThrows(UsernameNotFoundException::class.java) {
@@ -83,7 +84,7 @@ internal class AccountServiceTest {
     @Test
     fun signUp() {
         every {
-            userRepositoryMock.existsUserByUserId(any())
+            userRepositoryMock.existsUserByEmail(any())
         } returns false
 
         val userSlot = slot<User>()
@@ -96,10 +97,10 @@ internal class AccountServiceTest {
             call.invocation.args.first() as User
         }
 
-        assertNull(accountService.signUp("evert", "test"))
+        assertNull(accountService.signUp("evert@mail.com", "test"))
 
         val savedUser = userSlot.captured
-        assertEquals("evert", savedUser.userId)
+        assertEquals("evert@mail.com", savedUser.email)
         assertNotNull(savedUser.password)
         assertNotEquals("test", savedUser.password)
     }
@@ -107,10 +108,10 @@ internal class AccountServiceTest {
     @Test
     fun signUpFailedAccountNotAvailable() {
         every {
-            userRepositoryMock.existsUserByUserId("evert")
+            userRepositoryMock.existsUserByEmail("evert@mail.com")
         } returns true
 
-        assertEquals("Account not available", accountService.signUp("evert", "test"))
+        assertEquals("Account not available", accountService.signUp("evert@mail.com", "test"))
 
         verify(exactly = 0) {
             userRepositoryMock.save(
@@ -122,10 +123,10 @@ internal class AccountServiceTest {
     @Test
     fun `requestPasswordReset unknown user`() {
         every {
-            userRepositoryMock.findByUserId(any())
+            userRepositoryMock.findUserByEmail(any())
         } returns null
 
-        accountService.requestPasswordReset("Piet")
+        accountService.requestPasswordReset("piet@mail.com")
 
         verify {
             javaMailSender wasNot Called
@@ -138,15 +139,16 @@ internal class AccountServiceTest {
 
         val user = User(
                 1,
-                "evert",
+                UUID.randomUUID().toString(),
+                "evert@mail.com",
                 "oldpassword",
                 resetToken,
                 LocalDateTime.now().plusMinutes(1)
         )
 
         every {
-            userRepositoryMock.findByUserIdAndResetToken(
-                    "evert",
+            userRepositoryMock.findByEmailAndResetToken(
+                    "evert@mail.com",
                     resetToken
             )
         } returns user
@@ -156,13 +158,13 @@ internal class AccountServiceTest {
         every {
             userRepositoryMock.updatePassword(
                     capture(passwordSlot),
-                    "evert"
+                    "evert@mail.com"
             )
         } just runs
 
         assertNull(accountService.resetPassword(
                 ResetPasswordRequest(
-                        userId = "evert",
+                        email = "evert@mail.com",
                         newPassword = "newtest",
                         resetToken = resetToken
                 )
@@ -178,21 +180,21 @@ internal class AccountServiceTest {
             jwtServiceMock.getUsernameFromToken(
                     any()
             )
-        } returns "evert"
+        } returns "evert@mail.com"
 
         val passwordSlot = slot<String>()
 
         every {
             userRepositoryMock.updatePassword(
                     capture(passwordSlot),
-                    "evert"
+                    "evert@mail.com"
             )
         } just runs
 
 
         assertNull(accountService.resetPassword(
                 ResetPasswordRequest(
-                        userId = "evert",
+                        email = "evert@mail.com",
                         newPassword = "newtest",
                         resetToken = "8rueoi34045"
                 ),

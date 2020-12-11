@@ -14,7 +14,7 @@ class AuthenticationService(private var authenticationManager: AuthenticationMan
     fun authenticate(userName: String, password: String): AuthenticationResponse {
         val authentication = authenticationManager.authenticate(UsernamePasswordAuthenticationToken(userName, password))
         SecurityContextHolder.getContext().authentication = authentication
-        val token = jwtService.createAccessToken(userName, userName)
+        val token = jwtService.createAccessToken(authentication.name, userName)
         val refreshToken = jwtService.getRefreshToken()
         return AuthenticationResponse(token, refreshToken)
     }

@@ -26,10 +26,10 @@ class AccountService(private val userRepository: UserRepository,
 
     override fun loadUserByUsername(userName: String?): UserDetails {
          if(userName != null) {
-            val user = userRepository.findByUserId(userName)
+            val user = userRepository.findUserByEmail(userName)
 
             if(user != null) {
-                return AuthenticatedUser(userName, user.password)
+                return AuthenticatedUser(user.uuid, user.password)
             } else {
                 throw UsernameNotFoundException("User $userName could not be found")
             }
@@ -38,14 +38,15 @@ class AccountService(private val userRepository: UserRepository,
          }
     }
 
-    fun signUp(userName: String, password: String): String? {
-        return if(userRepository.existsUserByUserId(userName)) {
+    fun signUp(email: String, password: String): String? {
+        return if(userRepository.existsUserByEmail(email)) {
             "Account not available"
         } else {
             val passwordHash = hashPassword(password)
             userRepository.save(
                     User(
-                            userId = userName,
+                            uuid = UUID.randomUUID().toString(),
+                            email = email,
                             password = passwordHash
                     )
             )
@@ -56,8 +57,8 @@ class AccountService(private val userRepository: UserRepository,
     private fun hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
 
     @Transactional
-    fun requestPasswordReset(userId: String) {
-        val user = userRepository.findByUserId(userId)
+    fun requestPasswordReset(email: String) {
+        val user = userRepository.findUserByEmail(email)
 
         if (user == null) {
             return
@@ -71,8 +72,8 @@ class AccountService(private val userRepository: UserRepository,
 
         val mail = mailSender.createMimeMessage()
         val mailHelper = MimeMessageHelper(mail)
-        mailHelper.setText(createResetpasswordMessage(user.userId, resetToken), true)
-        mailHelper.setTo(user.userId)
+        mailHelper.setText(createResetpasswordMessage(user.uuid, resetToken), true)
+        mailHelper.setTo(user.uuid)
         mailHelper.setSubject("Wachtwoord opnieuw instellen")
         mailHelper.setFrom(mailUser)
         mailSender.send(mail)
@@ -88,7 +89,7 @@ class AccountService(private val userRepository: UserRepository,
     fun resetPassword(resetPasswordRequest: ResetPasswordRequest, authToken: String): String? {
         val userId = jwtService.getUsernameFromToken(authToken)
 
-        if (userId != resetPasswordRequest.userId) {
+        if (userId != resetPasswordRequest.email) {
             return "Tried to reset password of somebody else"
         }
 
@@ -101,8 +102,8 @@ class AccountService(private val userRepository: UserRepository,
             return "Invalid reset token"
         }
 
-        val user = userRepository.findByUserIdAndResetToken(
-                resetPasswordRequest.userId,
+        val user = userRepository.findByEmailAndResetToken(
+                resetPasswordRequest.email,
                 resetPasswordRequest.resetToken
         )
 
@@ -116,14 +117,14 @@ class AccountService(private val userRepository: UserRepository,
             return "Failed to reset password"
         }
 
-        resetPassword(user.userId, resetPasswordRequest.newPassword)
+        resetPassword(user.email, resetPasswordRequest.newPassword)
         return null
     }
 
-    private fun resetPassword(userId: String,
+    private fun resetPassword(email: String,
                               newPassword: String) {
         val passwordHash = hashPassword(newPassword)
-        userRepository.updatePassword(passwordHash, userId)
+        userRepository.updatePassword(passwordHash, email)
     }
 
 }

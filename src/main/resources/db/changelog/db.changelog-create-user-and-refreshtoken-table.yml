@@ -1,0 +1,56 @@
+databaseChangeLog:
+  -  changeSet:
+       id: create-user-table
+       author: Evert Tigchelaar
+       changes:
+         -  createTable:
+             columns:
+             -  column:
+                  name: user_id
+                  type: INTEGER
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+             -  column:
+                  name: uuid
+                  type: VARCHAR(250)
+                  constraints:
+                    nullable: false
+             -  column:
+                  name: email
+                  type: VARCHAR(250)
+                  constraints:
+                    nullable: false
+             -  column:
+                  name: password
+                  type: VARCHAR(250)
+                  constraints:
+                    nullable: false
+             -  column:
+                  name: resettoken
+                  type: VARCHAR(250)
+             -  column:
+                  name: resetoken_ttl
+                  type: DATETIME
+             tableName: user
+
+  -  changeSet:
+       id: create-refreshtoken-table
+       author: Evert Tigchelaar
+       changes:
+         -  createTable:
+              columns:
+                -  column:
+                     name: refresh_token_id
+                     type: INTEGER
+                     autoIncrement: true
+                     constraints:
+                       primaryKey: true
+                -  column:
+                     name: token
+                     type: VARCHAR(250)
+                     constraints:
+                       nullable: false
+              tableName: refreshtoken
+
+

@@ -11,15 +11,15 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 interface UserRepository : JpaRepository<User, Int> {
 
-    fun findByUserId(userId: String): User?
+    fun findUserByEmail(email: String): User?
 
-    fun findByUserIdAndResetToken(userId: String, resetToken: String): User?
+    fun findByEmailAndResetToken(email: String, resetToken: String): User?
 
-    fun existsUserByUserId(userId: String): Boolean
+    fun existsUserByEmail(email: String): Boolean
 
     @Modifying
     @Transactional
-    @Query("UPDATE User SET password = :newPassword, resetToken = null, resetTokenTtl = null WHERE userId = :userId")
+    @Query("UPDATE User SET password = :newPassword, resetToken = null, resetTokenTtl = null WHERE email = :email")
     fun updatePassword(@Param("newPassword") newPassword: String,
-                       @Param("userId") userid: String)
+                       @Param("email") email: String)
 }

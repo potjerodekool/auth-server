@@ -42,9 +42,10 @@ internal class AccountServiceTest {
 
     @Test
     fun loadUserByUserName() {
+        val uuid = UUID.randomUUID().toString()
         val user = User(
                 id = 121,
-                uuid = UUID.randomUUID().toString(),
+                uuid = uuid,
                 email= "evert@mail.com",
                 password = "90934-0",
         )
@@ -56,7 +57,7 @@ internal class AccountServiceTest {
         val loadedUser = accountService.loadUserByUsername("evert@mail.com")
 
         assertTrue(loadedUser is AuthenticatedUser)
-        assertEquals("evert@mail.com", loadedUser.username)
+        assertEquals(uuid, loadedUser.username)
     }
 
     @Test
